@@ -1,0 +1,44 @@
+//!
+//###############################
+//##### Configuration Time ######
+//###############################
+Clear Log();
+Close All( Data Tables, NoSave );
+Close All( Journals, NoSave );
+Close All( Reports, NoSave );
+
+maintable = Open("###RAWDATA###");
+table = current data table();
+table << Set Name("VminDistribution");
+table << save as("###SAVEDIR###.jmp");
+
+listOfTests = {
+###TEST_NAMES###
+};
+
+output2 = New Window("Distros_Vmin",
+    content = V List Box(
+	for(i=1,i<=Nitems(listOfTests),i++,
+		Data Table( "sdsVsSdtSplit" ) << Distribution(
+			Continuous Distribution( Column( ::VMIN ),Vertical( 0 ),
+				Normal Quantile Plot( 1 ) ),
+			WHERE( :SUPPLY SDS == listOfTests[i] ),
+			SendToReport(
+				Dispatch( {}, "NUMERIC_RESULT SDS", OutlineBox, {Set Title( "NUMERIC_RESULT SDS: " || listOfTests[i] )} ),
+				
+			)
+			)
+		)
+	);
+);
+
+//###############################
+//####### Clean Up Time #########
+//###############################
+
+output2 << save journal("###SAVEDIR###_distros.jrn");
+Close All( Data Tables, NoSave );
+
+Wait(1); t = N Table(); If(t > 0, For(i=1, i < t+1, i++, Close(Data Table(1));););
+Close All( Journals, NoSave);
+Quit();

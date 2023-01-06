@@ -1,0 +1,11 @@
+SELECT
+	lot,
+	operation,
+	number_of_wafers,
+	LAO_LOAD_END_DATE_TIME
+FROM A_Lot_At_Operation
+WHERE
+	SINGULAR_DEVREVSTEP LIKE '####DEVREVSTEP####'
+	and operation = '119325'
+	and LAO_LOAD_END_DATE_TIME >= TRUNC(SYSDATE) - 5
+ORDER BY LAO_LOAD_END_DATE_TIME DESC

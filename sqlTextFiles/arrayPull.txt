@@ -1,0 +1,22 @@
+
+SELECT
+	--ts.SITE AS SITENAME,
+	ts.LOT,
+	adt.interface_bin AS interface_bin
+FROM
+	a_testing_session ts
+	INNER JOIN a_device_testing adt
+	ON ts.ts_id = adt.ts_id
+	AND ts.LAO_START_WW = adt.LAO_START_WW
+	AND adt.LATEST_FLAG = 'Y'
+
+WHERE 1=1
+	AND ts.LOAD_END_DATE_TIME >= TRUNC(SYSDATE) - 10
+	AND ts.DEVREVSTEP LIKE '####DEVREVSTEP####'
+	AND ts.lot LIKE '%'
+	AND ts.WAFER_ID LIKE '%'
+	AND ts.OPERATION LIKE '%'
+	-- AND ts.SITE LIKE 'D1D_PROD_ARIES'
+	ORDER  BY
+	ts.TEST_END_DATE_TIME DESC,
+	ts.WAFER_ID DESC
