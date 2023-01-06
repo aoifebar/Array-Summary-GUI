@@ -339,4 +339,4 @@ def bin9899Pull(devStep, selectModule, operation, mail='aoife.barnes@intel.com')
 	
 	emailHeader = 'Bin 98/99 Analysis for '+str(devStep)
 	
-	singleEmailer(ttOut, emailHeader,mail)
+	singleEmailer(bin9899RawData, emailHeader,mail)

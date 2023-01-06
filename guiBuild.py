@@ -53,11 +53,9 @@ def getModule(position,root1):
 	textM.grid(row=position,column=2,rowspan = 1)
 	
 	position += 1
-	module = StringVar()
-	module.set("ARR_GRT")
-	moduleBox = Entry(root1,textvariable=module)
-	moduleBox.insert(0,"ARR_GRT")
-	moduleBox.grid(row=position,column=2,rowspan = 1)
+	module = Entry(root1)
+	module.grid(row=position,column=2,rowspan = 1)
+	module.insert(0,'ARR_GRT')
 	position += 1
 
 	return position,module
@@ -67,11 +65,9 @@ def getEmail(position,root1):
 	textM.grid(row=position,column=2,rowspan = 1)
 	
 	position += 1
-	email = StringVar()
-	email.set("aoife.barnes@intel.com")
-	emailBox = Entry(root1,textvariable=email,width=30)
-	emailBox.insert(0,"aoife.barnes@intel.com")
-	emailBox.grid(row=position,column=2,rowspan = 1)
+	email = Entry(root1,width=30)
+	email.grid(row=position,column=2,rowspan = 1)
+	email.insert(0,'aoife.barnes@intel.com')
 	position += 1
 
 	return position,email
@@ -81,11 +77,9 @@ def getOperation(position,root1):
 	textM.grid(row=position,column=2,rowspan = 1)
 	
 	position += 1
-	oper = StringVar()
-	oper.set("119325")
-	operBox = Entry(root1,textvariable=oper)
-	operBox.insert(0,"119325")
-	operBox.grid(row=position,column=2,rowspan = 1)
+	oper = Entry(root1)
+	oper.grid(row=position,column=2,rowspan = 1)
+	oper.insert(0,'119325')
 	position += 1
 
 	return position,oper
@@ -256,7 +250,7 @@ def bin9899GUI():
 	i,module = getModule(i,root)
 	i,mail = getEmail(i,root)
 
-	button = Button(root, text = "LET'S GO!", command = lambda: bin9899Pull(devStep.get(),module.get(),operation.get(),mail.get()))
+	button = Button(root, text = "LET'S GO!", command = lambda: bin9899Pull(devStep.get(),module.get(),oper.get(),mail.get()))
 	button.grid(row = i, column = 2,rowspan = 1)
 
 	root.mainloop()
