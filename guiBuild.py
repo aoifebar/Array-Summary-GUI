@@ -254,3 +254,55 @@ def bin9899GUI():
 	button.grid(row = i, column = 2,rowspan = 1)
 
 	root.mainloop()
+
+def runAllGUI():
+	root = Tk()
+	root.title('Config set for multiple')
+	tabControl = ttk.Notebook(root)
+
+	tab1 = ttk.Frame(tabControl)
+	tab2 = ttk.Frame(tabControl)
+
+	tabControl.add(tab1, text='Engineering Analysis')
+	tabControl.add(tab2, text='Production Analysis')
+	tabControl.pack(expand=1, fill="both")
+
+	flowOptions = ["BEGIN","PREHVQK","STRESS","POSTHVQK","END","SDTSTRESS","SDTEND"]
+
+	###############################################
+	##### TAB 1 : ENGINEERING ANALYSIS ON MVS #####
+	###############################################
+	engOptions = ['Test Time Analysis', 'Vmin Plots', 'Binning Summary', 'Repair Summary']
+	selectedEngOptions =[]
+	for x in range(len(engOptions)):
+	    l = Checkbutton(tab1, text=engOptions[x], variable=engOptions[x],command=lambda x=engOptions[x]:selectedEngOptions.append(x))
+	    l.grid(row=x,column=2,rowspan = 1)
+	i = x+1
+
+	i,engProductCode = productCode(i,tab1)
+	i,engLotNum = lotNumber(i,tab1)
+	i,engModule = getModule(i,tab1)
+	i,engFlow = getFlow(i,tab1,flowOptions)
+	i,engMail = getEmail(i,tab1)
+	i,engOperation = getOperation(i,tab1)
+
+	Button(tab1,text="Ok",command=lambda: selectAllPull('prod',selectedEngOptions,engProductCode.get(),engOperation.get(),engLotNum,engModule.get(),engFlow.get(),engMail.get())).grid(row=i,column=2,rowspan = 1)
+	
+	###############################################
+	######### TAB 2 : PRODUCTION ANALYSIS #########
+	###############################################
+	prodOptions = ['Test Time Analysis','Repair Summary', 'Bin98/99 Summary']
+	selectedprodOptions =[]
+	for x in range(len(prodOptions)):
+	    l = Checkbutton(tab2, text=prodOptions[x], variable=prodOptions[x],command=lambda x=prodOptions[x]:selectedprodOptions.append(x))
+	    l.grid(row=x,column=2,rowspan = 1)
+	i=x+1
+
+	i,prodProductCode = productCode(i,tab2)
+	i,prodModule = getModule(i,tab2)
+	i,prodMail = getEmail(i,tab2)
+	i,prodOperation = getOperation(i,tab2)
+
+	Button(tab2,text="Ok",command=lambda: selectAllPull('prod',selectedprodOptions,prodProductCode.get(),prodOperation.get(),None,prodModule.get(),None,prodMail.get())).grid(row=i,column=2,rowspan = 1)
+	
+	root.mainloop()

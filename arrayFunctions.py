@@ -261,7 +261,6 @@ def avgProdTTPull(devStep,module,oper,mail="aoife.barnes@intel.com"):
 	# Tabulate neatly
 	outputTable = {'Avg Testtime':[avgGDTT,avgBDTT],'Median Testtime':[medGDTT,medBDTT],'STD Testtime':[stdGDTT,stdBDTT]}
 	outputDF = pd.DataFrame(outputTable,index=["GDTT","BDTT"])
-	print(outputDF)
 
 	emailHeader = 'Average 7-day TT for '+str(module)
 	singleEmailer(outputDF, emailHeader, mail)
@@ -340,3 +339,31 @@ def bin9899Pull(devStep, selectModule, operation, mail='aoife.barnes@intel.com')
 	emailHeader = 'Bin 98/99 Analysis for '+str(devStep)
 	
 	singleEmailer(bin9899RawData, emailHeader,mail)
+
+
+########################################
+######### Config Set FUNCTIONS #########
+########################################
+def selectAllPull(engOrProd,pullTypeList,devStep,operation,lotNum,selectModule,selectFlow,userEmail='aoife.barnes@intel.com'):
+	if engOrProd=='eng':
+		for pullType in pullTypeList:
+			if pullType=='Test Time Analysis':
+				ttPull(devStep, lotNum, selectModule, selectFlow,userEmail)
+			elif pullType=='Vmin Plots':
+				vminPull(devStep, lotNum, selectModule,selectFlow)
+			elif pullType=='Binning Summary':
+				arraySummary(devStep,userEmail)
+			elif pullType=='Repair Summary':
+				repairSummary(engOrProd,devStep,operation,lotNum,userEmail)
+			else:
+				print("Invalid choice")
+	elif engOrProd=="prod":
+		for pullType in pullTypeList:
+			if pullType=='Test Time Analysis':
+				avgProdTTPull(devStep,selectModule,operation,userEmail)
+			elif pullType=='Repair Summary':
+				repairSummary(engOrProd,devStep,operation,lotNum,userEmail)
+			elif pullType=='Bin98/99 Summary':
+				bin9899Pull(devStep, selectModule, operation, userEmail)
+			else:
+				print("Invalid choice")

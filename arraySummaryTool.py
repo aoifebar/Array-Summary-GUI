@@ -45,5 +45,9 @@ button_tt.grid(row = 4, column = 2, rowspan = 1 )
 
 button_b98 = Button(mainframe, text="Bin98/99 Summary", height = 1, width = 20, command = bin9899GUI, borderwidth = 4, bg = 'blue', fg = 'white', font = '-family "SF Espresso Shack" -size 12')
 button_b98.grid(row = 5, column = 2, rowspan = 1 )
+
+button_all = Button(mainframe, text="Config set for multiple", height = 1, width = 20, command = runAllGUI, borderwidth = 4, bg = 'purple', fg = 'white', font = '-family "SF Espresso Shack" -size 12')
+button_all.grid(row = 6, column = 2, rowspan = 1 )
+
 ### Main loop
 root.mainloop()
