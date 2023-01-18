@@ -12,7 +12,7 @@ def sqlBuildAndRun(sourceSite, sqlPullPath, sqlOutputPath):
 				sqlPullPath:	path to text file with SQL pull code
 				sqlOutputPath:	path to send the output data to
 	"""
-	print("Reading sql "+sqlPullPath)
+	print("Reading sql " + str(sqlPullPath.resolve()))
 	with open(sqlPullPath, 'r') as file : # Read in the default sql script
 		uberScript = file.read()
 	
@@ -22,7 +22,7 @@ def sqlBuildAndRun(sourceSite, sqlPullPath, sqlOutputPath):
 	curr = conn.cursor();
 	curr.execute(uberScript);
 	curr.to_csv(sqlOutputPath);
-	print("SQL complete! Written to "+sqlOutputPath);
+	print("SQL complete! Written to "+str(sqlOutputPath.resolve()));
 
 def rebuildSQLFile(devstep = None, lotNum=None, module=None, flow=None, operation=None, wafer=None, sqlPullPathBlank=None, sqlPullPath=None):
 	""" rebuildSQLFile creates a new SQL text file from user inputs to enable correct SQL pull
