@@ -17,6 +17,7 @@ from jmpPull import *
 from datetime import date
 from datetime import datetime
 import time
+from pathlib import Path
 #from empiricaldist import Cdf
 
 ########################################
@@ -42,10 +43,13 @@ def getSQL(devStep=None, site=None, typeOfPull=None, numLot=None, operation=None
 			selectFlow:		only pull data from specific flow
 	"""
 	# Initiate SQL data input and output paths
-	source_path = os.path.dirname(os.path.realpath(__file__));
-	sqlPullPath = source_path+"\\sqlTextFiles\\"+typeOfPull+"Pull.txt"
-	sqlPullPathReplace = source_path+"\\sqlTextFiles\\"+typeOfPull+"PullReplace.txt"
-	sqlOutputPath = source_path+"\\sqlOutputCSV\\"+typeOfPull+"SqlOutput.csv"
+	source_path = Path.cwd()
+	ouputFolder = source_path / "sqlOutputCSV"
+	ouputFolder.mkdir(parents=True, exist_ok=True) #make folder if it doesn't exist
+	#source_path = os.path.dirname(os.path.realpath(__file__));
+	sqlPullPath = source_path / "sqlTextFiles" / "{0}Pull.txt".format(typeOfPull) 
+	sqlPullPathReplace = source_path / "sqlTextFiles" / "{0}PullReplace.txt".format(typeOfPull)
+	sqlOutputPath = source_path / "sqlOutputCSV" / "{0}SqlOutput.csv".format(typeOfPull)
 	
 	# Rebuild SQL file based on user inputs
 	rebuildSQLFile(devStep, numLot,selectModule, selectFlow, operation, wafer, sqlPullPath, sqlPullPathReplace)
