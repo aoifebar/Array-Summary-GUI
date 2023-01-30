@@ -88,6 +88,16 @@ def singleEmailer(dataFrameBody, subject, recipient):
 	mail.send
 	print('Email sent!')
 
+def writeToCSVFile(outputDF,typeOfPull,module):
+	# Initiate SQL data input and output paths
+	source_path = Path.cwd()
+	outputFolder = source_path / "resultsFiles"
+	outputFolder.mkdir(parents=True, exist_ok=True) #make folder if it doesn't exist
+	
+	sqlTextPath = source_path / "resultsFiles" / "{0}_{1}_result.csv".format(typeOfPull,module)
+	print("Printing to "+str(sqlTextPath)+"\n")
+	outputDF.to_csv(sqlTextPath)
+
 def sendToExcel(df,tableType):
 	source_path = os.path.dirname(os.path.realpath(__file__));
 	today = date.today()
@@ -199,7 +209,7 @@ def vminPull(devStep, numLot, selectModule,selectFlow):
 	vminRawData = getSQL(devStep=devStep, site="D1D", typeOfPull="vmin",numLot=numLot, selectModule=selectModule,selectFlow=selectFlow)
 	# Collect data and build CSV that has been filtered correctly
 	vminTestNames = vminCollectCSV(vminCSVPath, vminRawData)
-	jmpPlot(testNames,vminCSVPath) # plot vmin in JMP
+	jmpPlot(vminTestNames,vminCSVPath) # plot vmin in JMP
 
 def vminCollectCSV(vminCSVPath, vminRawData):
 	# Create path to write CSV
@@ -218,8 +228,10 @@ def vminCollectCSV(vminCSVPath, vminRawData):
 	vminData = vminData[vminData['VMIN']>0] # Removing all negative values, e.g. -999s, etc.
 	vminData.to_csv(vminCSVPath)
 	print("Vmin data written to CSV file.")
+	uniqueTestNames = vminData['TEST_NAME'].unique().tolist()
+	print(uniqueTestNames)
 	# Get test names from data frame
-	return vminData['TEST_NAME'].values.tolist()	
+	return uniqueTestNames	
 
 ########################################
 ###### TESTTIME SUMMARY FUNCTIONS ######
@@ -230,6 +242,7 @@ def avgProdTTPull(devStep,module,oper,mail="aoife.barnes@intel.com"):
 				module:	module selected by user to review.
 	"""
 	start_time = time.time()
+	print("Starting script to pull average production test time data for "+str(module)+"...\n")
 
 	# Get a list of lots and take a random sample of 3 lots
 	lotList = getSQL(devStep=devStep, site="F28", operation=oper, typeOfPull="lot")
@@ -249,7 +262,6 @@ def avgProdTTPull(devStep,module,oper,mail="aoife.barnes@intel.com"):
 	print("Testtime per module now available")
 	# Find the sum of the TT per die
 	ttRawDataPerDie = avgttRawData.groupby(['LOT','WAFER_ID','X','Y','IB'],as_index=False)['TESTTIME'].sum()
-	print(ttRawDataPerDie)
 	# Separate sum in GD vs BD
 	gdTTDataPerDie = ttRawDataPerDie.loc[ttRawDataPerDie['IB'] < 8]
 	bdTTDataPerDie = ttRawDataPerDie.loc[ttRawDataPerDie['IB'] >= 8]
@@ -268,8 +280,9 @@ def avgProdTTPull(devStep,module,oper,mail="aoife.barnes@intel.com"):
 
 	emailHeader = 'Average 7-day TT for '+str(module)
 	singleEmailer(outputDF, emailHeader, mail)
+	writeToCSVFile(outputDF,'avgProdTestTime',module)
 
-	print("My program took ", (time.time()-start_time)/60, " minutes to run")
+	#print("My program took ", (time.time()-start_time)/60, " minutes to run")
 	#sendToExcel(outputDF,"Avg TT Summary Prod")
 
 def ttPull(devStep, numLot, selectModule, selectFlow,userEmail):
@@ -337,12 +350,13 @@ def bin9899Pull(devStep, selectModule, operation, mail='aoife.barnes@intel.com')
 				selectModule:	module selected by user to review,
 				selectFlow:		Flow selected by user to review.
 	"""
+	
+	print("Starting script to pull bin98/99 data for "+str(selectModule)+"...\n")
 	bin9899RawData = getSQL(devStep=devStep, site="F28", typeOfPull="bin9899",numLot='%', selectModule=selectModule,operation=operation)
-	
-	
-	emailHeader = 'Bin 98/99 Analysis for '+str(devStep)
+	emailHeader = 'Bin 98/99 Analysis for '+str(selectModule)
 	
 	singleEmailer(bin9899RawData, emailHeader,mail)
+	writeToCSVFile(bin9899RawData,'bin9899',selectModule)
 
 
 ########################################
@@ -371,3 +385,15 @@ def selectAllPull(engOrProd,pullTypeList,devStep,operation,lotNum,selectModule,s
 				bin9899Pull(devStep, selectModule, operation, userEmail)
 			else:
 				print("Invalid choice")
+
+def pullMultipleModules(engOrProd,analysisType,listOfModules,devStep,operation,lotNum,selectFlow,userEmail='aoife.barnes@intel.com'):
+	print(engOrProd,analysisType,listOfModules,devStep,operation,lotNum,selectFlow,userEmail)
+	print(engOrProd,analysisType,listOfModules,devStep,operation,lotNum,selectFlow,userEmail)
+	if ',' in listOfModules:
+		listOfModules = listOfModules.split(',')
+		for module in listOfModules:
+			print("\nPulling data for module "+str(module))
+			selectAllPull(engOrProd,analysisType,devStep,operation,lotNum,module,selectFlow,userEmail='aoife.barnes@intel.com')
+	else:
+		print("\nPulling data for module "+str(listOfModules))
+		selectAllPull(engOrProd,analysisType,devStep,operation,lotNum,listOfModules,selectFlow,userEmail='aoife.barnes@intel.com')

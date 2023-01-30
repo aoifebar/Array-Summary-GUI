@@ -49,7 +49,7 @@ def getFlow(position,root1,flowOptions):
 	return position,flow
 
 def getModule(position,root1):
-	textM = Label(root1,text='Please specify your submodule:\nNote: memory can only handle one module at a time!\ne.g. "ARR_GRT"', width=50, height=3)
+	textM = Label(root1,text='Please specify your submodule: e.g. "ARR_GRT"\nIf you would like to enter more than one module,\nplease separate with commas, e.g. "ARR_GRT,ARR_CCF"', width=50, height=3)
 	textM.grid(row=position,column=2,rowspan = 1)
 	
 	position += 1
@@ -165,24 +165,17 @@ def vminGUI():
 	root1.title('Vmin Data Analysis')	
 
 	i=1 # marker for position on GUI
-	i,tpName = tpPath(i,root1)
-	buttonTP = Button(root1, text = "Find my modules!", command = lambda: vminTP(i,root1,tpName.get()))
-	buttonTP.grid(row = i, column = 2,rowspan = 1)
-
-	root1.mainloop()
-
-def vminTP(i,root1,path):
 	flowOptions = ["PREHVQK","POSTHVQK","END"]
-	moduleOptionsAll = os.listdir(path+"\\Modules")
-	moduleOptions = [m for m in moduleOptionsAll if 'ARR_' in m]
-	print("Found modules: ",moduleOptions)
-	i += 1
 	i,devStep = productCode(i,root1)
 	i,numLot = lotNumber(i,root1)
-	i,module,flow = moduleAndFlow(i,root1,moduleOptions,flowOptions)
+	i,module = getModule(i,root1)
+	i,flow = getFlow(i,root1,flowOptions)
+	i,email = getEmail(i,root1)
 		
 	button = Button(root1, text = "LET'S GO!", command = lambda: vminPull(devStep.get(), numLot.get(),module.get(),flow.get()))
 	button.grid(row = i, column = 2,rowspan = 1)
+
+	root1.mainloop()
 	
 def ttGUI():
 	###Root sicc
@@ -218,7 +211,7 @@ def ttGUI():
 	i,operationProd = getOperation(i,tab2)
 	i,moduleProd = getModule(i,tab2)
 	i,mailProd = getEmail(i,tab2)
-	buttonProd = Button(tab2, text = "LET'S GO!", command = lambda: avgProdTTPull(devStepProd.get(),moduleProd.get(),operationProd.get(),mailProd.get()))
+	buttonProd = Button(tab2, text = "LET'S GO!", command = lambda: pullMultipleModules("prod",["Test Time Analysis"],moduleProd.get(),devStepProd.get(),operationProd.get(),None,None,mailProd.get()))
 	buttonProd.grid(row = i, column = 2,rowspan = 1)
 
 	root1.mainloop()
@@ -250,7 +243,7 @@ def bin9899GUI():
 	i,module = getModule(i,root)
 	i,mail = getEmail(i,root)
 
-	button = Button(root, text = "LET'S GO!", command = lambda: bin9899Pull(devStep.get(),module.get(),oper.get(),mail.get()))
+	button = Button(root, text = "LET'S GO!", command = lambda: pullMultipleModules("prod",["Bin98/99 Summary"],module.get(),devStep.get(),oper.get(),None,None,mail.get()))
 	button.grid(row = i, column = 2,rowspan = 1)
 
 	root.mainloop()
@@ -286,7 +279,7 @@ def runAllGUI():
 	i,engMail = getEmail(i,tab1)
 	i,engOperation = getOperation(i,tab1)
 
-	Button(tab1,text="Ok",command=lambda: selectAllPull('prod',selectedEngOptions,engProductCode.get(),engOperation.get(),engLotNum,engModule.get(),engFlow.get(),engMail.get())).grid(row=i,column=2,rowspan = 1)
+	Button(tab1,text="Ok",command=lambda: pullMultipleModules('eng',selectedEngOptions,engModule.get(),engProductCode.get(),engOperation.get(),engLotNum,engFlow.get(),engMail.get())).grid(row=i,column=2,rowspan = 1)
 	
 	###############################################
 	######### TAB 2 : PRODUCTION ANALYSIS #########
@@ -303,6 +296,6 @@ def runAllGUI():
 	i,prodMail = getEmail(i,tab2)
 	i,prodOperation = getOperation(i,tab2)
 
-	Button(tab2,text="Ok",command=lambda: selectAllPull('prod',selectedprodOptions,prodProductCode.get(),prodOperation.get(),None,prodModule.get(),None,prodMail.get())).grid(row=i,column=2,rowspan = 1)
+	Button(tab2,text="Ok",command=lambda: pullMultipleModules('prod',selectedprodOptions,prodModule.get(),prodProductCode.get(),prodOperation.get(),None,None,prodMail.get())).grid(row=i,column=2,rowspan = 1)
 	
 	root.mainloop()

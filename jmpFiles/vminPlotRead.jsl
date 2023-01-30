@@ -13,18 +13,18 @@ table << Set Name("VminDistribution");
 table << save as("###SAVEDIR###.jmp");
 
 listOfTests = {
-###TEST_NAMES###
+"###TEST_NAMES###"
 };
 
 output2 = New Window("Distros_Vmin",
     content = V List Box(
 	for(i=1,i<=Nitems(listOfTests),i++,
-		Data Table( "sdsVsSdtSplit" ) << Distribution(
-			Continuous Distribution( Column( ::VMIN ),Vertical( 0 ),
+		Data Table( "VminDistribution" ) << Distribution(
+			Continuous Distribution( Column( :VMIN ),Vertical( 0 ),
 				Normal Quantile Plot( 1 ) ),
-			WHERE( :SUPPLY SDS == listOfTests[i] ),
+			WHERE( :TEST_NAME == listOfTests[i] ),
 			SendToReport(
-				Dispatch( {}, "NUMERIC_RESULT SDS", OutlineBox, {Set Title( "NUMERIC_RESULT SDS: " || listOfTests[i] )} ),
+				Dispatch( {}, "Vmin Result", OutlineBox, {Set Title( "Vmin Result: " || listOfTests[i] )} ),
 				
 			)
 			)

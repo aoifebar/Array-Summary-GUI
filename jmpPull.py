@@ -43,7 +43,7 @@ def jmpPlot(listOfTests, csvVminPath):
 	    
 	jmpScript = jmpScript.replace('###RAWDATA###', csvVminPath);
 	jmpScript = jmpScript.replace('###SAVEDIR###', jmpSaveDir);
-	jmpScript = jmpScript.replace('###TEST_NAMES###', ','.join(listOfTests));
+	jmpScript = jmpScript.replace('###TEST_NAMES###', '",\n"'.join(listOfTests));
 	
 	with open(jmpScriptToWrite, 'w') as file: # Write the file out again
 	    file.write(jmpScript);
