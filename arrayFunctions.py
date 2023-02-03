@@ -393,7 +393,7 @@ def pullMultipleModules(engOrProd,analysisType,listOfModules,devStep,operation,l
 		listOfModules = listOfModules.split(',')
 		for module in listOfModules:
 			print("\nPulling data for module "+str(module))
-			selectAllPull(engOrProd,analysisType,devStep,operation,lotNum,module,selectFlow,userEmail='aoife.barnes@intel.com')
+			selectAllPull(engOrProd,analysisType,devStep,operation,lotNum,module,selectFlow,userEmail)
 	else:
 		print("\nPulling data for module "+str(listOfModules))
-		selectAllPull(engOrProd,analysisType,devStep,operation,lotNum,listOfModules,selectFlow,userEmail='aoife.barnes@intel.com')
+		selectAllPull(engOrProd,analysisType,devStep,operation,lotNum,listOfModules,selectFlow,userEmail)
