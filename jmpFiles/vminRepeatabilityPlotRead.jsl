@@ -1,0 +1,47 @@
+//!
+//###############################
+//##### Configuration Time ######
+//###############################
+Clear Log();
+Close All( Data Tables, NoSave );
+Close All( Journals, NoSave );
+Close All( Reports, NoSave );
+
+maintable = Open("###RAWDATA###");
+table = current data table();
+table << New Column("FLOW",formula(Item(6, :TEST_NAME, "_")));
+table << New Column("INSTANCE_NAME",formula(Munger( Munger( :TEST_NAME, 1, "_PREHVQK", "" ), 1, "_POSTHVQK", "" )));
+table << 
+table << Split(
+	Split By( :FLOW ),
+	Split( :VMIN ),
+	Group( :INSTANCE_NAME, :WFR_X_Y ),
+	Remaining Columns( Drop All ),
+	Sort by Column Property,
+	Output Table Name( "Repeatability Split Plot" )
+);
+splitTable = Data Table( "Repeatability Split Plot" );
+splitTable << save as("###SAVEDIR###_###MODULE###_Repeatability.jmp");
+
+plots = split Table << Bivariate(
+	Y( :PREHVQK ),
+	X( :POSTHVQK ),
+	Fit Line( {Line Color( {212, 73, 88} )} ),
+	By( :INSTANCE_NAME )
+);
+
+jj = New Window( "The Output", <<journal, vlb = V List Box() );
+For( i = 1, i <= N Items( plots ), i++,
+	vlb << append( Report( plots[i] )[Outline Box( 1 )] )
+);
+
+//###############################
+//####### Clean Up Time #########
+//###############################
+
+jj << save journal("###SAVEDIR###_distros_###MODULE###_Repeatability.jrn");
+Close All( Data Tables, NoSave );
+
+Wait(1); t = N Table(); If(t > 0, For(i=1, i < t+1, i++, Close(Data Table(1));););
+Close All( Journals, NoSave);
+//

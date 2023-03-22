@@ -10,7 +10,7 @@ Close All( Reports, NoSave );
 maintable = Open("###RAWDATA###");
 table = current data table();
 table << Set Name("VminDistribution");
-table << save as("###SAVEDIR###.jmp");
+table << save as("###SAVEDIR###_###MODULE###_###FLOW###.jmp");
 
 listOfTests = {
 "###TEST_NAMES###"
@@ -19,16 +19,20 @@ listOfTests = {
 output2 = New Window("Distros_Vmin",
     content = V List Box(
 	for(i=1,i<=Nitems(listOfTests),i++,
-		Data Table( "VminDistribution" ) << Distribution(
-			Continuous Distribution( Column( :VMIN ),Vertical( 0 ),
-				Normal Quantile Plot( 1 ) ),
+		table << Distribution(
+			Continuous Distribution( 
+				Column( :VMIN ),
+				Histogram( 0 ),
+				Vertical( 0 ),
+				Outlier Box Plot( 0 ),
+				Normal Quantile Plot( 1 )
+			),
 			WHERE( :TEST_NAME == listOfTests[i] ),
 			SendToReport(
-				Dispatch( {}, "Vmin Result", OutlineBox, {Set Title( "Vmin Result: " || listOfTests[i] )} ),
-				
-			)
+				Dispatch( {}, "VMIN", OutlineBox, {Set Title( "Vmin Result: " || listOfTests[i])} )				
 			)
 		)
+	),
 	);
 );
 
@@ -36,9 +40,9 @@ output2 = New Window("Distros_Vmin",
 //####### Clean Up Time #########
 //###############################
 
-output2 << save journal("###SAVEDIR###_distros.jrn");
+output2 << save journal("C:\Users\aoifebar\OneDrive - Intel Corporation\Scripts\Array Mail\Array_Summary_GUI\jmpFiles\vminPlots_distros_###MODULE###_###FLOW###.jrn");
 Close All( Data Tables, NoSave );
 
 Wait(1); t = N Table(); If(t > 0, For(i=1, i < t+1, i++, Close(Data Table(1));););
 Close All( Journals, NoSave);
-Quit();
+//
