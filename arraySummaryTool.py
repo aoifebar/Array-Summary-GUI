@@ -31,8 +31,11 @@ background_label.place(relx=0.5, rely=0.5, anchor=CENTER)
 # button_dicc = Button(mainframe, text="DICC data analysis", height = 1, width = 20, command = dicc, borderwidth = 4, bg = 'green', fg = 'white', font = '-family "SF Espresso Shack" -size 12')
 # button_dicc.grid(row = 0, column = 2, rowspan = 1 )
 
-button_vcc = Button(mainframe, text="Vmin plots", height = 1, width = 20, command = vminGUI, borderwidth = 4, bg = 'blue', fg = 'white', font = '-family "SF Espresso Shack" -size 12')
-button_vcc.grid(row = 1, column = 2, rowspan = 1 )
+button_vcc = Button(mainframe, text="Vmin plots", height = 1, width = 20, command = vminGUI, borderwidth = 4, bg = 'purple', fg = 'white', font = '-family "SF Espresso Shack" -size 12')
+button_vcc.grid(row = 0, column = 2, rowspan = 1 )
+
+button_vrr = Button(mainframe, text="Vmin Repeatability plots", height = 1, width = 20, command = vminRepeatabilityGUI, borderwidth = 4, bg = 'blue', fg = 'white', font = '-family "SF Espresso Shack" -size 12')
+button_vrr.grid(row = 1, column = 2, rowspan = 1 )
 
 button_repair = Button(mainframe, text="Repair", height = 1, width = 20, command = repairGUI, borderwidth = 4, bg = 'purple', fg = 'white', font = '-family "SF Espresso Shack" -size 12')
 button_repair.grid(row = 2, column = 2, rowspan = 1 )

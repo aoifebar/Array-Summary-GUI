@@ -1,6 +1,9 @@
 {
   "ExpandedNodes": [
     "",
+    "\\jmpFiles",
+    "\\resultsFiles",
+    "\\sqlOutputCSV",
     "\\sqlTextFiles"
   ],
   "SelectedNode": "\\arrayFunctions.py",

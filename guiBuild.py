@@ -168,15 +168,33 @@ def vminGUI():
 	flowOptions = ["PREHVQK","POSTHVQK","END"]
 	i,devStep = productCode(i,root1)
 	i,numLot = lotNumber(i,root1)
+	i,operation = getOperation(i,root1)
+	i,tpname = tpPath(i,root1)
 	i,module = getModule(i,root1)
 	i,flow = getFlow(i,root1,flowOptions)
-	i,email = getEmail(i,root1)
 		
-	button = Button(root1, text = "LET'S GO!", command = lambda: vminPull(devStep.get(), numLot.get(),module.get(),flow.get()))
+	button = Button(root1, text = "LET'S GO!", command = lambda: pullMultipleModules(engOrProd="eng",analysisType=["Vmin Plots"],listOfModules=module.get(),devStep=devStep.get(),operation=operation.get(),lotNum=numLot.get(),selectFlow=flow.get(),userEmail=None,tpName=tpname.get()))
 	button.grid(row = i, column = 2,rowspan = 1)
 
 	root1.mainloop()
 	
+def vminRepeatabilityGUI():
+	###Root sicc
+	root1 = Tk()
+	root1.title('Vmin Repeatability Analysis')	
+
+	i=1 # marker for position on GUI
+	i,devStep = productCode(i,root1)
+	i,numLot = lotNumber(i,root1)
+	i,operation = getOperation(i,root1)
+	i,tpname = tpPath(i,root1)
+	i,module = getModule(i,root1)
+		
+	button = Button(root1, text = "LET'S GO!", command = lambda: pullMultipleModules(engOrProd="eng",analysisType=["Vmin Repeatability"],listOfModules=module.get(),devStep=devStep.get(),operation=operation.get(),lotNum=numLot.get(),selectFlow=None,userEmail=None,tpName=tpname.get()))
+	button.grid(row = i, column = 2,rowspan = 1)
+
+	root1.mainloop()
+
 def ttGUI():
 	###Root sicc
 	root1 = Tk()
@@ -211,7 +229,7 @@ def ttGUI():
 	i,operationProd = getOperation(i,tab2)
 	i,moduleProd = getModule(i,tab2)
 	i,mailProd = getEmail(i,tab2)
-	buttonProd = Button(tab2, text = "LET'S GO!", command = lambda: pullMultipleModules("prod",["Test Time Analysis"],moduleProd.get(),devStepProd.get(),operationProd.get(),None,None,mailProd.get()))
+	buttonProd = Button(tab2, text = "LET'S GO!", command = lambda: pullMultipleModules("prod",["Test Time Analysis"],moduleProd.get(),devStepProd.get(),operationProd.get(),None,None,mailProd.get(),None))
 	buttonProd.grid(row = i, column = 2,rowspan = 1)
 
 	root1.mainloop()
@@ -243,7 +261,7 @@ def bin9899GUI():
 	i,module = getModule(i,root)
 	i,mail = getEmail(i,root)
 
-	button = Button(root, text = "LET'S GO!", command = lambda: pullMultipleModules("prod",["Bin98/99 Summary"],module.get(),devStep.get(),oper.get(),None,None,mail.get()))
+	button = Button(root, text = "LET'S GO!", command = lambda: pullMultipleModules("prod",["Bin98/99 Summary"],module.get(),devStep.get(),oper.get(),None,None,mail.get(),None))
 	button.grid(row = i, column = 2,rowspan = 1)
 
 	root.mainloop()
@@ -279,7 +297,7 @@ def runAllGUI():
 	i,engMail = getEmail(i,tab1)
 	i,engOperation = getOperation(i,tab1)
 
-	Button(tab1,text="Ok",command=lambda: pullMultipleModules('eng',selectedEngOptions,engModule.get(),engProductCode.get(),engOperation.get(),engLotNum,engFlow.get(),engMail.get())).grid(row=i,column=2,rowspan = 1)
+	Button(tab1,text="Ok",command=lambda: pullMultipleModules('eng',selectedEngOptions,engModule.get(),engProductCode.get(),engOperation.get(),engLotNum,engFlow.get(),engMail.get(),None)).grid(row=i,column=2,rowspan = 1)
 	
 	###############################################
 	######### TAB 2 : PRODUCTION ANALYSIS #########
@@ -296,6 +314,6 @@ def runAllGUI():
 	i,prodMail = getEmail(i,tab2)
 	i,prodOperation = getOperation(i,tab2)
 
-	Button(tab2,text="Ok",command=lambda: pullMultipleModules('prod',selectedprodOptions,prodModule.get(),prodProductCode.get(),prodOperation.get(),None,None,prodMail.get())).grid(row=i,column=2,rowspan = 1)
+	Button(tab2,text="Ok",command=lambda: pullMultipleModules('prod',selectedprodOptions,prodModule.get(),prodProductCode.get(),prodOperation.get(),None,None,prodMail.get(),None)).grid(row=i,column=2,rowspan = 1)
 	
 	root.mainloop()

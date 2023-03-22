@@ -1,0 +1,78 @@
+SELECT DISTINCT
+    seshLevel.lot AS lot
+    ,seshLevel.operation AS operation
+    ,seshLevel.program_name AS TestProgram
+    ,seshLevel.wafer_id AS wafer_id
+    ,seshLevel.wafer_id  || '_'  ||  dieLevel.sort_x  || '_' ||  dieLevel.sort_y AS WFR_X_Y
+    ,dieLevel.interface_bin AS ibin
+    ,dieLevel.functional_bin AS fbin
+    ,NVL(dieLevel.sort_partialwafer_id ,'N\A')  || '_'  ||  NVL(dieLevel.carrier_x ,0)  || '_' ||  NVL(dieLevel.carrier_y ,0) AS TRAY_X_Y
+    ,NVL(dieLevel.site_id ,0) AS Site_ID
+    ,testyBoi.test_name AS test_name
+    ,paraboi.numeric_result AS NUMERIC_RESULT
+    ,stringyBoi.string_result AS STRING_RESULT
+    -- ,CAST(REGEXP_REPLACE( stringyBoi.string_result , '\|.*', '') as float) AS cleanStringRes
+    -- ,(CAST(NVL(REGEXP_REPLACE( stringyBoi.string_result , '\|.*', ''),0) as float) + paraboi.numeric_result) AS MERGED_RESULT_1
+    -- ,(CAST(NVL(REGEXP_REPLACE( stringyBoi.string_result , '\|.*', ''),0) as float) + NVL(paraboi.numeric_result,0)) AS MERGED_RESULT_2
+    ,CASE
+        WHEN 
+            paraboi.numeric_result is not null
+            OR
+            CAST(REGEXP_REPLACE( stringyBoi.string_result , '_.*|\|.*', '') as float) is not null
+		THEN
+            (CAST(NVL(REGEXP_REPLACE( stringyBoi.string_result , '_.*|\|.*', ''),0) as float) + NVL(paraboi.numeric_result,0))
+	END AS VMIN
+FROM
+    A_TESTING_SESSION seshLevel
+INNER JOIN
+    A_DEVICE_TESTING dieLevel
+    ON
+		seshLevel.lao_start_ww = dieLevel.lao_start_ww
+        AND seshLevel.ts_id = dieLevel.ts_id
+INNER JOIN
+    A_TEST testyBoi
+    ON
+		seshLevel.program_name = testyBoi.program_name    
+        AND seshLevel.devrevstep = testyBoi.devrevstep
+LEFT JOIN (
+    SELECT DISTINCT
+		testyBoi.t_id AS tid99 
+        ,seshLevel.ts_id AS TSID99
+        ,seshLevel.lao_start_ww AS lww99,
+        paraboi.ss_id
+        ,decode(A_SEQ_1_TO_9.seq,1,paraboi.NUMERIC_RESULT_1,2,paraboi.NUMERIC_RESULT_2,3,paraboi.NUMERIC_RESULT_3,4,paraboi.NUMERIC_RESULT_4,5,paraboi.NUMERIC_RESULT_5,6,paraboi.NUMERIC_RESULT_6,7,paraboi.NUMERIC_RESULT_7,8,paraboi.NUMERIC_RESULT_8,paraboi.NUMERIC_RESULT_9) AS numeric_result
+        ,decode(A_SEQ_1_TO_9.seq,1,paraboi.dt_id_1,2,paraboi.dt_id_2,3,paraboi.dt_id_3,4,paraboi.dt_id_4,5,paraboi.dt_id_5,6,paraboi.dt_id_6,7,paraboi.dt_id_7,8,paraboi.dt_id_8,paraboi.dt_id_9) AS dt_id
+    FROM
+		A_TESTING_SESSION seshLevel
+    INNER JOIN
+		A_TEST testyBoi 
+        ON
+			testyBoi.devrevstep = seshLevel.devrevstep 
+            AND testyBoi.test_name in ('####TESTNAMES####')
+	INNER JOIN
+		A_NINE_PARAMETRIC_RESULTS paraboi 
+        ON
+			seshLevel.lao_start_ww = paraboi.lao_start_ww 
+            AND seshLevel.ts_id = paraboi.ts_id 
+            AND testyBoi.t_id = paraboi.t_id 
+    CROSS JOIN A_Seq_1_To_9
+    WHERE
+		seshLevel.lot = '####LOT####'
+        AND seshLevel.operation = '####OPERATION####'
+) paraboi 
+    ON
+		seshLevel.ts_id = paraboi.tsid99 
+        AND seshLevel.lao_start_ww = paraboi.lww99 
+        AND testyBoi.t_id = paraboi.tid99
+        AND paraboi.dt_id = dieLevel.dt_id
+LEFT JOIN
+    A_STRING_RESULT stringyBoi 
+    ON
+		seshLevel.lao_start_ww = stringyBoi.lao_start_ww 
+        AND seshLevel.ts_id = stringyBoi.ts_id 
+        AND dieLevel.dt_id = stringyBoi.dt_id 
+        AND testyBoi.t_id = stringyBoi.t_id
+WHERE
+    LOT = '####LOT####' AND
+    OPERATION LIKE '####OPERATION####' AND
+    testyBoi.test_name in ('####TESTNAMES####')

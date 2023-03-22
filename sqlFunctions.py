@@ -6,13 +6,15 @@ except:
     subprocess.call(python_exe + ' -m pip install https://github.intel.com/fabnet/PyUber/zipball/master --proxy="http://proxy-chain.intel.com:911"');
     import PyUber
 
+import os
+
 def sqlBuildAndRun(sourceSite, sqlPullPath, sqlOutputPath):
 	"""sqlBuildAndRun uses an SQL text file to pull data from a specificed ARIES/XEUS site and feeds the output into a CSV file
 		Inputs:	sourceSite:		specify whether you are pulling data from prod site or eng site, e.g. D1D, F28
 				sqlPullPath:	path to text file with SQL pull code
 				sqlOutputPath:	path to send the output data to
 	"""
-	print("Reading sql " + str(sqlPullPath.resolve()))
+	print("Reading sql 'sqlTextFiles/" + str(os.path.basename(sqlPullPath.resolve()))+"'")
 	with open(sqlPullPath, 'r') as file : # Read in the default sql script
 		uberScript = file.read()
 	
@@ -22,9 +24,9 @@ def sqlBuildAndRun(sourceSite, sqlPullPath, sqlOutputPath):
 	curr = conn.cursor();
 	curr.execute(uberScript);
 	curr.to_csv(sqlOutputPath);
-	print("SQL complete! Written to "+str(sqlOutputPath.resolve()));
+	print("SQL complete! Written to 'sqlOutputCSV/"+str(os.path.basename(sqlOutputPath.resolve()))+"'");
 
-def rebuildSQLFile(devstep = None, lotNum=None, module=None, flow=None, operation=None, wafer=None, sqlPullPathBlank=None, sqlPullPath=None):
+def rebuildSQLFile(devstep = None, lotNum=None, module=None, flow=None, operation=None, wafer=None, sqlPullPathBlank=None, sqlPullPath=None, listOfTests=None):
 	""" rebuildSQLFile creates a new SQL text file from user inputs to enable correct SQL pull
 		Inputs:	devstep:			default=None, specifies product code, e.g. 8PQKCVN
 				lotNum				default=None, specifies MV lot number
@@ -52,9 +54,7 @@ def rebuildSQLFile(devstep = None, lotNum=None, module=None, flow=None, operatio
 			fileToWrite = fileToWrite.replace("####WAFER####",wafer)
 		if flow is not None:
 			fileToWrite = fileToWrite.replace("####FLOW####", flow)
-		if(module=='ARR_MBIST' or flow=='END'):
-			fileToWrite = fileToWrite.replace("--####MBIST/END####", '')
-		else:
-			fileToWrite = fileToWrite.replace("--####PBIST####", '')
+		if listOfTests is not None:
+			fileToWrite = fileToWrite.replace("####TESTNAMES####", listOfTests)
 		writeFile.write(fileToWrite)
 	

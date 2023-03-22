@@ -18,6 +18,7 @@ from datetime import date
 from datetime import datetime
 import time
 from pathlib import Path
+import re
 #from empiricaldist import Cdf
 
 ########################################
@@ -32,7 +33,7 @@ def splitTT(row):
 ########################################
 ######## SQL COLLECTION FUNCTION #######
 ########################################
-def getSQL(devStep=None, site=None, typeOfPull=None, numLot=None, operation=None, wafer=None, selectModule=None,selectFlow=None):
+def getSQL(devStep=None, site=None, typeOfPull=None, numLot=None, operation=None, wafer=None, selectModule=None,selectFlow=None,listOfTests=None):
 	"""getSQL: takes multiple user inputs, creates SQL text files to pull data, outputs data into CSV and returns the CSV string as a dataframe
 	Inputs:	devStep:		user specified product code, e.g. 8PQKCVN,
 			site:			site to pull data from, is it prod or eng data?
@@ -47,12 +48,13 @@ def getSQL(devStep=None, site=None, typeOfPull=None, numLot=None, operation=None
 	ouputFolder = source_path / "sqlOutputCSV"
 	ouputFolder.mkdir(parents=True, exist_ok=True) #make folder if it doesn't exist
 	#source_path = os.path.dirname(os.path.realpath(__file__));
+
 	sqlPullPath = source_path / "sqlTextFiles" / "{0}Pull.txt".format(typeOfPull) 
 	sqlPullPathReplace = source_path / "sqlTextFiles" / "{0}PullReplace.txt".format(typeOfPull)
 	sqlOutputPath = source_path / "sqlOutputCSV" / "{0}SqlOutput.csv".format(typeOfPull)
 	
 	# Rebuild SQL file based on user inputs
-	rebuildSQLFile(devStep, numLot,selectModule, selectFlow, operation, wafer, sqlPullPath, sqlPullPathReplace)
+	rebuildSQLFile(devStep, numLot,selectModule, selectFlow, operation, wafer, sqlPullPath, sqlPullPathReplace,listOfTests)
 	
 	# Then we need to pull the data
 	sqlBuildAndRun(site,sqlPullPathReplace, sqlOutputPath)
@@ -176,6 +178,7 @@ def createRepairSummary(origDF):
 	# Keep only those die that have passed post HRY (successful repair) or failed pre HRY (sent for repair)
 	countRepairPerInstanceColumns = countRepairPerInstanceColumns[((countRepairPerInstanceColumns.Pass_Fail=='P')&(countRepairPerInstanceColumns.TEST_NAME.str.contains("_POST_")))|((countRepairPerInstanceColumns.Pass_Fail=='F')&(countRepairPerInstanceColumns.TEST_NAME.str.contains("_PRE_")))]
 	# Split the test name to remove the pre/post specification
+	print(countRepairPerInstanceColumns)
 	countRepairPerInstanceColumns['TEST_NAME'] = countRepairPerInstanceColumns.apply(lambda row: splitTestName(row), axis = 1)
 	finalCountRepairPerInstance = countRepairPerInstanceColumns.pivot_table(index='TEST_NAME',columns='Pass_Fail',fill_value=0, aggfunc=np.sum) # pivot this table to get summary of repair results
 	finalCountRepairPerInstance['Total Die'] = finalCountRepairPerInstance['REPAIR_COUNT']['F'] # add total number of die column
@@ -196,7 +199,7 @@ def splitTestName(row):
 ########################################	
 ######## VMIN SUMMARY FUNCTIONS ########
 ########################################
-def vminPull(devStep, numLot, selectModule,selectFlow):
+def vminPull(devStep, numLot, selectModule,selectFlow,tpName,operation):
 	"""vminPull is a function called by the GUI with user inputs and build a CSV file containing vmin info from an MV to be used later for plots.
 		Inputs:	devStep:		user input to specify product code,
 				numLot:			MV lot number, specified by user,
@@ -204,34 +207,70 @@ def vminPull(devStep, numLot, selectModule,selectFlow):
 				selectFlow:		Flow selected by user to review.
 	"""
 	source_path = os.path.dirname(os.path.realpath(__file__));
-	vminCSVPath = source_path+"\\sqlOutputCSV\\"+"vminCSV.csv"
+	vminCSVPath = source_path+"\\sqlOutputCSV\\"+"vminPostOutput.csv"
+
 	# Pull SQL data
-	vminRawData = getSQL(devStep=devStep, site="D1D", typeOfPull="vmin",numLot=numLot, selectModule=selectModule,selectFlow=selectFlow)
+	listOfTestNames = []
+	tpName = tpName+ '\Modules\\'+selectModule+'\\'+selectModule+'.mtpl'
+	with open(tpName, 'r') as df:
+		for line in df:
+			if "iCFASTTest" in line and selectFlow in line:
+				line = line.split('\n')[0]
+				test_name = line.split(" ")[2]
+				listOfTestNames.append(selectModule+'::'+test_name)
+			if "iCVminTest" in line and selectFlow in line:
+				line = line.split('\n')[0]
+				test_name = line.split(" ")[2]
+				listOfTestNames.append(selectModule+'::'+test_name)
+	listOfTestNamesJMP = listOfTestNames
+	listOfTestNames = '\',\''.join(listOfTestNames)
+	vminRawData = getSQL(devStep=devStep, site="D1D", typeOfPull="vmin",numLot=numLot, selectModule=selectModule,selectFlow=selectFlow,listOfTests=listOfTestNames,operation=operation)
+	vminRawData = vminRawData[vminRawData['VMIN']>0]
+	vminRawData.to_csv(vminCSVPath)
+
 	# Collect data and build CSV that has been filtered correctly
-	vminTestNames = vminCollectCSV(vminCSVPath, vminRawData)
-	jmpPlot(vminTestNames,vminCSVPath) # plot vmin in JMP
+	jmpPlot(listOfTestNamesJMP,vminCSVPath,selectModule,selectFlow) # plot vmin in JMP
 
-def vminCollectCSV(vminCSVPath, vminRawData):
-	# Create path to write CSV
+def vminRepeatabilityPull(devStep, numLot, selectModule,tpName,operation):
+	"""vminPull is a function called by the GUI with user inputs and build a CSV file containing vmin info from an MV to be used later for plots.
+		Inputs:	devStep:		user input to specify product code,
+				numLot:			MV lot number, specified by user,
+				selectModule:	module selected by user to review,
+				selectFlow:		Flow selected by user to review.
+	"""
+	source_path = os.path.dirname(os.path.realpath(__file__));
+	vminCSVPath = source_path+"\\sqlOutputCSV\\"+"vminPostRepeatabilityOutput.csv"
 
-	# Create new dataframe
-	vminData = pd.DataFrame()
-	# Check if data is string format, e.g. 0.5|0.6..., or integer. 
-	if isinstance(vminRawData,str): # if string, split string and convert to integer
-		vminData['VMIN']=vminRawData['VMIN'].str.split('|').str[0]
-		vminData['TEST_NAME'] = vminRawData['TEST_NAME']
-	else:
-		vminData = vminRawData[['TEST_NAME','VMIN']]
-	# Remove SD and ADTL data
-	vminData = vminData[vminData['TEST_NAME'].str.contains("::ADTL")==False]
-	vminData = vminData[vminData['TEST_NAME'].str.contains("::SD")==False]
-	vminData = vminData[vminData['VMIN']>0] # Removing all negative values, e.g. -999s, etc.
-	vminData.to_csv(vminCSVPath)
-	print("Vmin data written to CSV file.")
-	uniqueTestNames = vminData['TEST_NAME'].unique().tolist()
-	print(uniqueTestNames)
-	# Get test names from data frame
-	return uniqueTestNames	
+	# Pull SQL data
+	listOfTestNames = []
+	tpName = tpName+ '\Modules\\'+selectModule+'\\'+selectModule+'.mtpl'
+	with open(tpName, 'r') as df:
+		for line in df:
+			if "iCFASTTest" in line and "PREHVQK" in line:
+				line = line.split('\n')[0]
+				test_name = line.split(" ")[2]
+				listOfTestNames.append(selectModule+'::'+test_name)
+			if "iCVminTest" in line and "PREHVQK" in line:
+				line = line.split('\n')[0]
+				test_name = line.split(" ")[2]
+				listOfTestNames.append(selectModule+'::'+test_name)
+			if "iCFASTTest" in line and "POSTHVQK" in line:
+				line = line.split('\n')[0]
+				test_name = line.split(" ")[2]
+				listOfTestNames.append(selectModule+'::'+test_name)
+			if "iCVminTest" in line and "POSTHVQK" in line:
+				line = line.split('\n')[0]
+				test_name = line.split(" ")[2]
+				listOfTestNames.append(selectModule+'::'+test_name)
+	listOfTestNamesJMP = listOfTestNames
+	listOfTestNames = '\',\''.join(listOfTestNames)
+	vminRawData = getSQL(devStep=devStep, site="D1D", typeOfPull="vminRepeatability",numLot=numLot, selectModule=selectModule,listOfTests=listOfTestNames,operation=operation)
+	vminRawData = vminRawData[vminRawData['VMIN']>0]
+	vminRawData.to_csv(vminCSVPath)
+
+	# Collect data and build CSV that has been filtered correctly
+	jmpRepeatabilityPlot(listOfTestNamesJMP,vminCSVPath,selectModule) # plot vmin in JMP
+	
 
 ########################################
 ###### TESTTIME SUMMARY FUNCTIONS ######
@@ -362,17 +401,19 @@ def bin9899Pull(devStep, selectModule, operation, mail='aoife.barnes@intel.com')
 ########################################
 ######### Config Set FUNCTIONS #########
 ########################################
-def selectAllPull(engOrProd,pullTypeList,devStep,operation,lotNum,selectModule,selectFlow,userEmail='aoife.barnes@intel.com'):
+def selectAllPull(engOrProd,pullTypeList,devStep,operation,lotNum,selectModule,selectFlow,userEmail='aoife.barnes@intel.com',tpName=None):
 	if engOrProd=='eng':
 		for pullType in pullTypeList:
 			if pullType=='Test Time Analysis':
 				ttPull(devStep, lotNum, selectModule, selectFlow,userEmail)
-			elif pullType=='Vmin Plots':
-				vminPull(devStep, lotNum, selectModule,selectFlow)
 			elif pullType=='Binning Summary':
 				arraySummary(devStep,userEmail)
 			elif pullType=='Repair Summary':
 				repairSummary(engOrProd,devStep,operation,lotNum,userEmail)
+			elif pullType=="Vmin Repeatability":
+				vminRepeatabilityPull(devStep, lotNum,selectModule, tpName,operation)
+			elif pullType=="Vmin Plots":
+				vminPull(devStep, lotNum,selectModule,selectFlow, tpName,operation)
 			else:
 				print("Invalid choice")
 	elif engOrProd=="prod":
@@ -386,14 +427,12 @@ def selectAllPull(engOrProd,pullTypeList,devStep,operation,lotNum,selectModule,s
 			else:
 				print("Invalid choice")
 
-def pullMultipleModules(engOrProd,analysisType,listOfModules,devStep,operation,lotNum,selectFlow,userEmail='aoife.barnes@intel.com'):
-	print(engOrProd,analysisType,listOfModules,devStep,operation,lotNum,selectFlow,userEmail)
-	print(engOrProd,analysisType,listOfModules,devStep,operation,lotNum,selectFlow,userEmail)
+def pullMultipleModules(engOrProd,analysisType,listOfModules,devStep,operation,lotNum,selectFlow,userEmail='aoife.barnes@intel.com',tpName=None):
 	if ',' in listOfModules:
 		listOfModules = listOfModules.split(',')
 		for module in listOfModules:
 			print("\nPulling data for module "+str(module))
-			selectAllPull(engOrProd,analysisType,devStep,operation,lotNum,module,selectFlow,userEmail)
+			selectAllPull(engOrProd,analysisType,devStep,operation,lotNum,module,selectFlow,userEmail,tpName)
 	else:
 		print("\nPulling data for module "+str(listOfModules))
-		selectAllPull(engOrProd,analysisType,devStep,operation,lotNum,listOfModules,selectFlow,userEmail)
+		selectAllPull(engOrProd,analysisType,devStep,operation,lotNum,listOfModules,selectFlow,userEmail,tpName)
