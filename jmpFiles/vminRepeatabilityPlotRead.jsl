@@ -9,7 +9,7 @@ Close All( Reports, NoSave );
 
 maintable = Open("###RAWDATA###");
 table = current data table();
-table << New Column("FLOW",formula(Item(6, :TEST_NAME, "_")));
+table << New Column("FLOW",formula(Item(5, Item(3, :TEST_NAME, ":"),"_")));
 table << New Column("INSTANCE_NAME",formula(Munger( Munger( :TEST_NAME, 1, "_PREHVQK", "" ), 1, "_POSTHVQK", "" )));
 table << 
 table << Split(
